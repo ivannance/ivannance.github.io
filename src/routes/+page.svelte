@@ -1,3 +1,3 @@
-<body class="flex justify-center items-center h-screen bg-blue-500">
-	<h1 class="text-6xl font-bold text-white">Hello World!</h1>
-</body>
+<div class="flex justify-center items-center w-screen h-screen bg-blue-500">
+	<h1 class="text-6xl font-bold">Hello World!</h1>
+</div>
