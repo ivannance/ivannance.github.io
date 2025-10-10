@@ -1,7 +1,15 @@
-import windowsLogo from '$lib/assets/windows_logo.svg';
-import appleLogo from '$lib/assets/apple_logo.svg';
-import androidLogo from '$lib/assets/android_logo.svg';
-import fireTVLogo from '$lib/assets/firetv_logo.png';
+import windowsLogo from '../assets/windows_logo.svg';
+import appleLogo from '../assets/apple_logo.svg';
+import androidLogo from '../assets/android_logo.svg';
+import fireTVLogo from '../assets/firetv_logo.png';
+
+const slugify = (input: string) =>
+	input
+		.replace(/\s+/g, '-')
+		.replace(/[^a-zA-Z0-9-]/g, '')
+		.replace(/-+/g, '-')
+		.replace(/^-+|-+$/g, '')
+		.toLowerCase();
 
 export const platformData = [
 	{ src: windowsLogo, alt: 'Windows logo', width: '30em' },
@@ -10,101 +18,42 @@ export const platformData = [
 	{ src: fireTVLogo, alt: 'Fire TV logo', width: '60em' }
 ];
 
-export const guides = [
-	{
-		title: 'Free Music Premium',
-		platforms: [true, true, true, false],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	},
-	{
-		title: 'Paid Mobile Apps for Free',
-		platforms: [false, true, true, false],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	},
-	{
-		title: 'Paid PC Games for Free',
-		platforms: [true, false, false, false],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	},
-	{
-		title: 'All Movies and TV Shows for Free',
-		platforms: [true, true, true, true],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	},
-	{
-		title: 'Modded YouTube',
-		platforms: [true, true, true, true],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	},
-	{
-		title: 'Modded Instagram',
-		platforms: [false, true, true, false],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	},
-	{
-		title: 'Modded TikTok',
-		platforms: [false, true, true, false],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	},
-	{
-		title: 'Modded Snapchat',
-		platforms: [false, false, true, false],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	},
-	{
-		title: 'Games with Everything Unlocked',
-		platforms: [false, true, true, false],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	},
-	{
-		title: 'Best Free Ad Blockers',
-		platforms: [true, true, true, false],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	},
-	{
-		title: 'Unblock Apps & Sites on School WiFi',
-		platforms: [true, true, true, false],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	},
-	{
-		title: 'Play Nintendo Switch Games on PC',
-		platforms: [true, false, false, false],
-		windowsSteps: [],
-		iPhoneSteps: [],
-		androidSteps: [],
-		fireTVSteps: []
-	}
+const rawGuides = [
+	'Free Music Premium',
+	'Paid Mobile Apps for Free',
+	'Paid PC Games for Free',
+	'All Movies and TV Shows for Free',
+	'Modded YouTube',
+	'Modded Instagram',
+	'Modded TikTok',
+	'Modded Snapchat',
+	'Games with Everything Unlocked',
+	'Best Free Ad Blockers',
+	'Unblock Apps & Sites on School WiFi',
+	'Play Nintendo Switch Games on PC'
 ];
+
+const platformsList = [
+	[true, true, true, false],
+	[false, true, true, false],
+	[true, false, false, false],
+	[true, true, true, true],
+	[true, true, true, true],
+	[false, true, true, false],
+	[false, true, true, false],
+	[false, false, true, false],
+	[false, true, true, false],
+	[true, true, true, false],
+	[true, true, true, false],
+	[true, false, false, false]
+];
+
+export const guides = rawGuides.map((title, i) => ({
+	title,
+	slug: slugify(title),
+	platforms: platformsList[i] ?? [false, false, false, false],
+	windowsSteps: [],
+	iPhoneSteps: [],
+	androidSteps: [],
+	fireTVSteps: []
+}));

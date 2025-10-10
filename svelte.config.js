@@ -1,13 +1,21 @@
 import adapter from '@sveltejs/adapter-static';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { register } from 'ts-node';
 
-export default {
+register({
+	transpileOnly: true
+});
+
+import { prerenderGuides } from './src/lib/data/guides-prerender.js';
+
+const config = {
+	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
-			fallback: undefined,
-			precompress: false,
-			strict: true
-		})
+		adapter: adapter({ fallback: null }),
+		prerender: {
+			entries: ['*', ...prerenderGuides.map((g) => `/guides/${g.slug}`)]
+		}
 	}
 };
+
+export default config;
