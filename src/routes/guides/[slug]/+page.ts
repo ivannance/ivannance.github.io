@@ -14,3 +14,5 @@ export function load({ params }) {
 	if (!guide) throw error(404, 'Guide not found');
 	return { guide };
 }
+
+export const prerender = false;
