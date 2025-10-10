@@ -2,4 +2,5 @@
 	<title>Ivan's World</title>
 </svelte:head>
 
-<h1>Hello World!</h1>
+<h1 class="text-center">Welcome to my site!</h1>
+<h2>"Apple" - Imaad</h2>
