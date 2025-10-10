@@ -1,11 +1,5 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-import { register } from 'ts-node';
-
-register({
-	transpileOnly: true
-});
-
 import { prerenderGuides } from './src/lib/data/guides-prerender.js';
 
 const config = {
