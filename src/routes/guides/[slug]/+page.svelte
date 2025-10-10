@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { platformData } from '$lib/data/guides';
+	import { platformData } from '$lib/data/guides.js';
 	export let data;
 	const guide = data.guide;
 </script>
