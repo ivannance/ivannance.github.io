@@ -19,7 +19,7 @@ export const platformData = [
 ];
 
 const rawGuides = [
-	'Free Music Premium',
+	'Free Spotify Premium',
 	'Paid Mobile Apps for Free',
 	'Paid PC Games for Free',
 	'All Movies and TV Shows for Free',
@@ -27,10 +27,10 @@ const rawGuides = [
 	'Modded Instagram',
 	'Modded TikTok',
 	'Modded Snapchat',
-	'Games with Everything Unlocked',
-	'Best Free Ad Blockers',
 	'Unblock Apps & Sites on School WiFi',
-	'Play Nintendo Switch Games on PC'
+	'Play Nintendo Switch Games on PC',
+	'Allow iPhone to install unofficial apps',
+	'General Tips'
 ];
 
 const platformsList = [
@@ -42,18 +42,38 @@ const platformsList = [
 	[false, true, true, false],
 	[false, true, true, false],
 	[false, false, true, false],
-	[false, true, true, false],
 	[true, true, true, false],
-	[true, true, true, false],
-	[true, false, false, false]
+	[true, false, false, false],
+	[false, true, false, false],
+	[true, true, true, true]
 ];
+
+const descriptions = [
+	'No ads just music. Enjoy! note: If you prefer youtube for music follow modded youtube guide'
+]
+
+const windowsSteps = [
+	[
+		'Uninstall Spotify if you already have it',
+		'Look up "spotx download" and go to their Github page',
+		'Scroll down until you see "Full Installation" and click on dropdown',
+		'Then click on "Install_Auto.bat" and it should download',
+		'Once downloaded, run the file and say allow/yes to any prompts',
+		"After that just let it run and it should do it all for you once it's done you should have Spotify installed",
+		'Finally, open it up, login in and enjoy!'
+	]
+];
+const iPhoneSteps = [null];
+const androidSteps = [null];
+const fireTVSteps = [null];
 
 export const guides = rawGuides.map((title, i) => ({
 	title,
 	slug: slugify(title),
 	platforms: platformsList[i] ?? [false, false, false, false],
-	windowsSteps: [],
-	iPhoneSteps: [],
-	androidSteps: [],
-	fireTVSteps: []
+	description: descriptions[i] ?? 'Missing Description',
+	windowsSteps: windowsSteps[i] ?? ['Missing Steps'],
+	iPhoneSteps: iPhoneSteps[i] ?? ['Missing Steps'],
+	androidSteps: androidSteps[i] ?? ['Missing Steps'],
+	fireTVSteps: fireTVSteps[i] ?? ['Missing Steps']
 }));

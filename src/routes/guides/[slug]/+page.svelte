@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { platformData } from '$lib/data/guides.js';
+	import { platformData } from '$lib/data/guides';
 	export let data;
 	const guide = data.guide;
 </script>
@@ -20,6 +20,9 @@
 		</div>
 	</div>
 
+	<h1>Description</h1>
+	<p>{guide.description}</p>
+
 	<h1>Demonstration</h1>
 
 	<h1>Video Tutorial</h1>
@@ -28,7 +31,7 @@
 		<h1>Windows Guide</h1>
 		<ol class="ml-5 list-none space-y-2">
 			{#each guide.windowsSteps as step}
-				<p>{@html step}</p>
+				<li>{@html step}</li>
 			{/each}
 		</ol>
 	{/if}
