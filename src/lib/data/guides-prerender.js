@@ -1,5 +1,5 @@
 export const prerenderGuides = [
-	{ title: 'Free Spotify Premium', slug: 'free-spotfiy-premium' },
+	{ title: 'Free Spotify Premium', slug: 'free-spotify-premium' },
 	{ title: 'Paid Mobile Apps for Free', slug: 'paid-mobile-apps-for-free' },
 	{ title: 'Paid PC Games for Free', slug: 'paid-pc-games-for-free' },
 	{ title: 'All Movies and TV Shows for Free', slug: 'all-movies-and-tv-shows-for-free' },

@@ -50,13 +50,13 @@ const platformsList = [
 
 const descriptions = [
 	'No ads just music. Enjoy! note: If you prefer youtube for music follow modded youtube guide'
-]
+];
 
 const windowsSteps = [
 	[
 		'Uninstall Spotify if you already have it',
-		'Look up "spotx download" and go to their Github page',
-		'Scroll down until you see "Full Installation" and click on dropdown',
+		'Go to the <a href="https://github.com/SpotX-Official/SpotX" target="_blank">SpotX Github Page</a>',
+		'Scroll down until you see "Full installation" and click on dropdown',
 		'Then click on "Install_Auto.bat" and it should download',
 		'Once downloaded, run the file and say allow/yes to any prompts',
 		"After that just let it run and it should do it all for you once it's done you should have Spotify installed",
