@@ -16,7 +16,6 @@
 	let navElement: HTMLElement | null = null;
 	let navHeight = 0;
 
-	// Initialize grid
 	for (let r = 0; r < rows; r++) {
 		grid[r] = [];
 		for (let c = 0; c < cols; c++) {
@@ -100,11 +99,12 @@
 			ArrowRight: [1, 0]
 		};
 		if (e.key === ' ') {
-			e.preventDefault(); // Stop page scroll
+			e.preventDefault();
 			reset();
 			return;
 		}
 		if (keyMap[e.key]) {
+			e.preventDefault();
 			const [x, y] = keyMap[e.key];
 			if (snakeCoords.length === 1 || (dirX !== -x && dirY !== -y)) {
 				dirX = x;
@@ -122,7 +122,6 @@
 	}
 
 	function resizeGrid() {
-		// Detect navbar dynamically if present
 		const foundNav = document.querySelector('nav');
 		if (foundNav) {
 			navElement = foundNav as HTMLElement;
@@ -131,7 +130,6 @@
 			navHeight = 0;
 		}
 
-		// Calculate available area below navbar
 		const availableHeight = window.innerHeight - navHeight;
 		const size = Math.min(window.innerWidth, availableHeight) * 0.85;
 		containerSize = size;
@@ -153,25 +151,16 @@
 	});
 </script>
 
-<!-- Responsive game grid -->
-<div
-	id="snake-grid"
-	style="width: {containerSize}px; height: {containerSize}px;"
->
+<div id="snake-grid" style="width: {containerSize}px; height: {containerSize}px;">
 	{#each grid as row, y}
 		{#each row as color, x}
-			<div
-				class="snake-cell"
-				style="background-color: {color};"
-				id="{x}_{y}"
-			></div>
+			<div class="snake-cell" style="background-color: {color};" id="{x}_{y}"></div>
 		{/each}
 	{/each}
 </div>
 
 <style>
 	#snake-grid {
-		margin: auto;
 		display: grid;
 		grid-template-columns: repeat(12, 1fr);
 		grid-template-rows: repeat(12, 1fr);
