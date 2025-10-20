@@ -1,5 +1,8 @@
 <script>
-	const games = [{ name: 'Snake', path: '/fun/snake', color: 'green' }];
+	const games = [
+		{ name: 'Snake', path: '/fun/snake', color: 'green' },
+		{ name: 'Maze', path: '/fun/maze', color: 'red' }
+	];
 </script>
 
 <svelte:head>
@@ -16,22 +19,17 @@
 		{#each games as game}
 			<a href={game.path} class="game-card card">
 				<div class="game-icon" style="--game-color: {game.color}">
-					<svg 
-						class="icon-svg" 
-						fill="none" 
-						stroke="currentColor" 
-						viewBox="0 0 24 24"
-					>
-						<path 
-							stroke-linecap="round" 
-							stroke-linejoin="round" 
-							stroke-width="2" 
+					<svg class="icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
 							d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
 						/>
-						<path 
-							stroke-linecap="round" 
-							stroke-linejoin="round" 
-							stroke-width="2" 
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
 							d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
 						/>
 					</svg>
@@ -94,7 +92,8 @@
 	}
 
 	@keyframes gradientShift {
-		0%, 100% {
+		0%,
+		100% {
 			background-position: 0% center;
 		}
 		50% {
@@ -150,7 +149,9 @@
 
 	.game-card:hover {
 		transform: translateY(-10px) scale(1.02);
-		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(99, 102, 241, 0.3);
+		box-shadow:
+			0 20px 40px rgba(0, 0, 0, 0.6),
+			0 0 30px rgba(99, 102, 241, 0.3);
 		border-color: var(--color-primary);
 	}
 
@@ -160,12 +161,7 @@
 		left: -50%;
 		width: 200%;
 		height: 200%;
-		background: linear-gradient(
-			45deg,
-			transparent,
-			rgba(255, 255, 255, 0.1),
-			transparent
-		);
+		background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
 		transform: rotate(45deg);
 		transition: all 0.6s ease;
 		pointer-events: none;

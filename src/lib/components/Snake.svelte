@@ -195,7 +195,7 @@
 		const availableWidth = window.innerWidth - 32; // 16px padding each side
 		const size = Math.min(availableWidth, availableHeight);
 		containerSize = Math.max(280, size); // Minimum 280px
-		
+
 		isMobile = window.innerWidth <= 767;
 	}
 
@@ -226,11 +226,7 @@
 		{/if}
 	</div>
 
-	<div 
-		class="snake-grid-wrapper"
-		on:touchstart={handleTouchStart}
-		on:touchend={handleTouchEnd}
-	>
+	<div class="snake-grid-wrapper" on:touchstart={handleTouchStart} on:touchend={handleTouchEnd}>
 		<div id="snake-grid" style="width: {containerSize}px; height: {containerSize}px;">
 			{#each grid as row, y}
 				{#each row as color, x}
@@ -242,11 +238,57 @@
 
 	<div class="controls-section">
 		{#if isMobile}
-			<p class="controls-hint">Swipe to control</p>
+			<div class="touch-controls">
+				<div class="d-pad">
+					<button class="d-pad-btn up" on:click={() => handleButtonPress(0, -1)}>
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="3"
+								d="M5 15l7-7 7 7"
+							/>
+						</svg>
+					</button>
+					<div class="d-pad-middle">
+						<button class="d-pad-btn left" on:click={() => handleButtonPress(-1, 0)}>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="3"
+									d="M15 19l-7-7 7-7"
+								/>
+							</svg>
+						</button>
+						<button class="d-pad-btn right" on:click={() => handleButtonPress(1, 0)}>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="3"
+									d="M9 5l7 7-7 7"
+								/>
+							</svg>
+						</button>
+					</div>
+					<button class="d-pad-btn down" on:click={() => handleButtonPress(0, 1)}>
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="3"
+								d="M19 9l-7 7-7-7"
+							/>
+						</svg>
+					</button>
+				</div>
+			</div>
+			<p class="controls-hint">Swipe or use buttons to control</p>
 		{:else}
 			<p class="controls-hint">Use WASD or arrow keys to control the snake</p>
 		{/if}
-		
+
 		<button class="button-primary reset-btn" on:click={reset}>
 			{gameOver ? 'Play Again' : 'Reset Game'}
 		</button>
@@ -354,6 +396,76 @@
 		align-items: center;
 		gap: var(--spacing-md);
 		width: 100%;
+	}
+
+	.touch-controls {
+		width: 100%;
+		display: flex;
+		justify-content: center;
+		padding: var(--spacing-md);
+	}
+
+	.d-pad {
+		display: grid;
+		grid-template-rows: auto auto auto;
+		gap: 4px;
+		width: 180px;
+	}
+
+	.d-pad-middle {
+		display: grid;
+		grid-template-columns: 1fr 1fr 1fr;
+		gap: 4px;
+	}
+
+	.d-pad-btn {
+		width: 100%;
+		height: 56px;
+		background: linear-gradient(135deg, var(--color-surface), var(--color-surface-elevated));
+		border: 2px solid var(--color-border-light);
+		border-radius: var(--radius-md);
+		color: var(--color-text);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		touch-action: manipulation;
+	}
+
+	.d-pad-btn:active {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		transform: scale(0.95);
+		box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+	}
+
+	.d-pad-btn svg {
+		width: 32px;
+		height: 32px;
+	}
+
+	.d-pad-btn.up {
+		grid-column: 2;
+	}
+
+	.d-pad-btn.down {
+		grid-column: 2;
+	}
+
+	.d-pad-btn.left {
+		grid-column: 1;
+	}
+
+	.d-pad-btn.right {
+		grid-column: 3;
+	}
+
+	.controls-hint {
+		text-align: center;
+		color: var(--color-text-secondary);
+		font-size: 1rem;
+		margin: 0;
 	}
 
 	.reset-btn {

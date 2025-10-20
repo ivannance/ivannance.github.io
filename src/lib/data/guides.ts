@@ -52,7 +52,7 @@ const descriptions: Record<string, string> = {
 	'Free Spotify Premium':
 		'No ads just music. Enjoy!<br /><span class="text-orange-400">Note: If you prefer YouTube for music, follow the <a href="/guides/modded-youtube"  data-sveltekit-reload>Modded YouTube guide</a></span>',
 	'Allow iPhone to install unofficial apps':
-		"<span class='text-orange-400'>Note: a computer is needed for the guide but after initial setup you won't need it</span>"
+		"Set up iPhone to install apps not from the App Store and modified apps<br /><span class='text-orange-400'>Note: a computer is needed for the guide but after initial setup you won't need it</span>"
 };
 
 const windowsSteps: Record<string, string[]> = {
