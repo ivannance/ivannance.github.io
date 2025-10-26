@@ -20,33 +20,25 @@ export const platformData = [
 
 const rawGuides = [
 	'Free Spotify Premium',
-	'Paid Mobile Apps for Free',
-	'Paid PC Games for Free',
 	'All Movies and TV Shows for Free',
+	'General Tips',
+	'Allow iPhone to install unofficial apps',
 	'Modded YouTube',
 	'Modded Instagram',
 	'Modded TikTok',
-	'Modded Snapchat',
-	'Unblock Apps & Sites on School WiFi',
-	'Play Nintendo Switch Games on PC',
-	'Allow iPhone to install unofficial apps',
-	'General Tips'
+	'Modded Snapchat'
 ];
 
-const platformsList = [
-	[true, true, true, false],
-	[false, true, true, false],
-	[true, false, false, false],
-	[true, true, true, true],
-	[true, true, true, true],
-	[false, true, true, false],
-	[false, true, true, false],
-	[false, false, true, false],
-	[true, true, true, false],
-	[true, false, false, false],
-	[false, true, false, false],
-	[true, true, true, true]
-];
+const platformsList: Record<string, boolean[]> = {
+	'Free Spotify Premium': [true, true, true, false],
+	'All Movies and TV Shows for Free': [true, true, true, true],
+	'General Tips': [true, true, true, true],
+	'Allow iPhone to install unofficial apps': [false, true, false, false],
+	'Modded YouTube': [true, true, true, true],
+	'Modded Instagram': [false, true, true, false],
+	'Modded TikTok': [false, true, true, false],
+	'Modded Snapchat': [false, false, true, false]
+};
 
 const descriptions: Record<string, string> = {
 	'Free Spotify Premium':
@@ -111,7 +103,11 @@ const appleSteps: Record<string, string[]> = {
 
 const androidSteps: Record<string, string[]> = {
 	'Free Spotify Premium': [
-		'COMING SOON!'
+		'Go to Settings > Apps > Special app access > Install unknown apps and and enable it for your web browser and your files app',
+		'Download app <a href="https://drive.usercontent.google.com/download?id=1s_hYvhRYPDL2I-YjVwrFyW3v5dSRgUGK&export=download&authuser=0" target="_blank">here</a> it will most likely give you a warning about the file size just press download anyway',
+		'Once the download completes simple open the download and press install',
+		'Now just open the newly install Spotify, login and Enjoy!',
+		"P.S. If your Spotify account is setup through your Google account just use the continue with email option and use your Google account email. If you don't know your password use the Login without password option"
 	]
 };
 
@@ -127,7 +123,7 @@ const fireTVSteps: Record<string, string[]> = {
 export const guides = rawGuides.map((title, i) => ({
 	title,
 	slug: slugify(title),
-	platforms: platformsList[i] ?? [false, false, false, false],
+	platforms: platformsList[title] ?? [false, false, false, false],
 	description: descriptions[title] ?? 'Missing Description',
 	windowsSteps: windowsSteps[title] ?? ['Missing Steps'],
 	appleSteps: appleSteps[title] ?? ['Missing Steps'],
