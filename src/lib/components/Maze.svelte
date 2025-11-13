@@ -36,6 +36,11 @@
 	let showingSolution: boolean = false;
 	let exitPos: Position = { row: 0, col: 0 };
 
+	// Movement state
+	let currentDirection: { dr: number; dc: number } | null = null;
+	let moveInterval: number | null = null;
+	const MOVE_SPEED = 75; // ms per step — lower = faster
+
 	// Helper functions
 	function createEmptyGrid(): string[][] {
 		return Array(mazeRows)
@@ -129,39 +134,64 @@
 		mazeStatus = 'made';
 
 		grid = grid;
+		stopMoving();
 	}
 
 	function movePlayer(dr: number, dc: number): void {
-		if (mazeStatus !== 'made' || showingSolution) return;
-
 		const newRow = playerPos.row + dr;
 		const newCol = playerPos.col + dc;
 
-		if (isValidCell(newRow, newCol) && grid[newRow][newCol] !== COLORS.background) {
-			if (!(playerPos.row === 1 && playerPos.col === 0)) {
-				grid[playerPos.row][playerPos.col] = COLORS.path;
-			}
-
-			playerPos = { row: newRow, col: newCol };
-
-			if (newRow === exitPos.row && newCol === exitPos.col) {
-				grid[newRow][newCol] = COLORS.player;
-				mazeStatus = 'finished';
-
-				setTimeout(() => {
-					mazeLevel += 6;
-					currentLevel++;
-					mazeRows = mazeLevel;
-					mazeCols = mazeLevel;
-					updateBoardSize();
-					generateMaze();
-				}, 500);
-			} else {
-				grid[newRow][newCol] = COLORS.player;
-			}
-
-			grid = grid;
+		// Hit wall → stop moving
+		if (!isValidCell(newRow, newCol) || grid[newRow][newCol] === COLORS.background) {
+			stopMoving();
+			return;
 		}
+
+		// Move player
+		if (!(playerPos.row === 1 && playerPos.col === 0)) {
+			grid[playerPos.row][playerPos.col] = COLORS.path;
+		}
+
+		playerPos = { row: newRow, col: newCol };
+		grid[newRow][newCol] = COLORS.player;
+
+		// Check for win
+		if (newRow === exitPos.row && newCol === exitPos.col) {
+			stopMoving();
+			mazeStatus = 'finished';
+			setTimeout(() => {
+				mazeLevel += 6;
+				currentLevel++;
+				mazeRows = mazeLevel;
+				mazeCols = mazeLevel;
+				updateBoardSize();
+				generateMaze();
+			}, 300);
+		}
+
+		grid = grid;
+	}
+
+	function startMoving(dr: number, dc: number) {
+		if (mazeStatus !== 'made' || showingSolution) return;
+
+		currentDirection = { dr, dc };
+
+		// Clear any existing loop
+		if (moveInterval) clearInterval(moveInterval);
+
+		// Continuous movement
+		moveInterval = setInterval(() => {
+			if (currentDirection) movePlayer(currentDirection.dr, currentDirection.dc);
+		}, MOVE_SPEED);
+	}
+
+	function stopMoving() {
+		if (moveInterval) {
+			clearInterval(moveInterval);
+			moveInterval = null;
+		}
+		currentDirection = null;
 	}
 
 	function handleKeyDown(event: KeyboardEvent): void {
@@ -180,7 +210,7 @@
 		if (!move) return;
 
 		event.preventDefault();
-		movePlayer(move.dr, move.dc);
+		startMoving(move.dr, move.dc);
 	}
 
 	function handleTouchStart(e: TouchEvent): void {
@@ -194,27 +224,19 @@
 
 		const deltaX = touchEndX - touchStartX;
 		const deltaY = touchEndY - touchStartY;
-
 		const minSwipeDistance = 20;
 
-		if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) {
-			return;
-		}
+		if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) return;
 
 		if (Math.abs(deltaX) > Math.abs(deltaY)) {
-			movePlayer(0, deltaX > 0 ? 1 : -1);
+			startMoving(0, deltaX > 0 ? 1 : -1);
 		} else {
-			movePlayer(deltaY > 0 ? 1 : -1, 0);
+			startMoving(deltaY > 0 ? 1 : -1, 0);
 		}
-	}
-
-	function handleButtonPress(dr: number, dc: number): void {
-		movePlayer(dr, dc);
 	}
 
 	function displaySolution(): void {
 		if (mazeStatus !== 'made') return;
-
 		showingSolution = true;
 
 		for (let r = 0; r < mazeRows; r++) {
@@ -260,11 +282,14 @@
 	onMount(() => {
 		updateBoardSize();
 		generateMaze();
+		window.addEventListener('keydown', handleKeyDown);
 		window.addEventListener('resize', handleResize);
 	});
 
 	onDestroy(() => {
+		window.removeEventListener('keydown', handleKeyDown);
 		window.removeEventListener('resize', handleResize);
+		stopMoving();
 	});
 </script>
 
