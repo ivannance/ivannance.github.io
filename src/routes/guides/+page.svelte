@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { guides, platformData } from '$lib/data/guides';
+	import { platformData } from '$lib/data/guides';
+
+	export let data;
+	const guides = data.guides;
 
 	const sanitizeForUrl = (input: string) =>
 		input
@@ -38,9 +41,9 @@
 							{#each Array(4) as _, i}
 								<div class="platform-icon">
 									{#if supported[i]}
-										<img 
-											src={supported[i].src} 
-											alt={supported[i].alt} 
+										<img
+											src={supported[i].src}
+											alt={supported[i].alt}
 											width={supported[i].width}
 											class="platform-img"
 										/>
@@ -93,7 +96,8 @@
 	}
 
 	@keyframes pulse {
-		0%, 100% {
+		0%,
+		100% {
 			box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
 		}
 		50% {
@@ -107,7 +111,8 @@
 	}
 
 	@keyframes bounce {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translateY(0);
 		}
 		50% {
@@ -250,7 +255,7 @@
 			justify-content: center;
 			align-items: center;
 		}
-		
+
 		.page-header {
 			margin-bottom: var(--spacing-lg);
 		}
