@@ -38,8 +38,27 @@
 
 	// Movement state
 	let currentDirection: { dr: number; dc: number } | null = null;
-	let moveInterval: number | null = null;
+	let moveInterval: ReturnType<typeof setInterval> | null = null;
 	const MOVE_SPEED = 75; // ms per step — lower = faster
+
+	function saveProgress() {
+		if (typeof localStorage === 'undefined') return;
+		localStorage.setItem('mazeLevel', String(mazeLevel));
+		localStorage.setItem('currentLevel', String(currentLevel));
+	}
+
+	function loadProgress() {
+		if (typeof localStorage === 'undefined') return;
+
+		const savedMaze = localStorage.getItem('mazeLevel');
+		const savedLevel = localStorage.getItem('currentLevel');
+
+		if (savedMaze) mazeLevel = parseInt(savedMaze);
+		if (savedLevel) currentLevel = parseInt(savedLevel);
+
+		mazeRows = mazeLevel;
+		mazeCols = mazeLevel;
+	}
 
 	// Helper functions
 	function createEmptyGrid(): string[][] {
@@ -50,6 +69,10 @@
 
 	function isValidCell(row: number, col: number): boolean {
 		return row >= 0 && row < mazeRows && col >= 0 && col < mazeCols;
+	}
+
+	function handleButtonPress(dr: number, dc: number) {
+		startMoving(dr, dc);
 	}
 
 	function generateMaze(): void {
@@ -162,6 +185,7 @@
 			setTimeout(() => {
 				mazeLevel += 6;
 				currentLevel++;
+				saveProgress();
 				mazeRows = mazeLevel;
 				mazeCols = mazeLevel;
 				updateBoardSize();
@@ -259,6 +283,7 @@
 	function resetGame(): void {
 		mazeLevel = 5;
 		currentLevel = 1;
+		saveProgress();
 		mazeRows = mazeLevel;
 		mazeCols = mazeLevel;
 		updateBoardSize();
@@ -280,6 +305,7 @@
 	}
 
 	onMount(() => {
+		loadProgress();
 		updateBoardSize();
 		generateMaze();
 		window.addEventListener('keydown', handleKeyDown);
