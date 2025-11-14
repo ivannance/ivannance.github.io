@@ -1,5 +1,72 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { supabase } from '$lib/supabase';
+
+	let playerName = '';
+	let leaderboard: any[] = [];
+	let showNamePrompt = false;
+	let isSubmitting = false;
+	let hasSubmittedScore = false;
+
+	async function loadLeaderboard() {
+		const { data, error } = await supabase
+			.from('snake_leaderboard')
+			.select('*')
+			.order('score', { ascending: false })
+			.limit(20);
+
+		if (error) {
+			console.error('Error loading leaderboard:', error);
+		} else {
+			leaderboard = data || [];
+		}
+	}
+
+	async function submitScore() {
+		if (!playerName.trim() || score <= 0 || isSubmitting) return;
+
+		isSubmitting = true;
+		const trimmedName = playerName.trim();
+
+		try {
+			localStorage.setItem('snakePlayerName', trimmedName);
+
+			const { error } = await supabase.from('snake_leaderboard').insert({
+				player_name: trimmedName,
+				score: score
+			});
+
+			if (error) {
+				console.error('Error submitting score:', error);
+				alert('Failed to submit score. Please try again.');
+			} else {
+				hasSubmittedScore = true;
+				showNamePrompt = false;
+				await loadLeaderboard();
+			}
+		} catch (err) {
+			console.error('Unexpected error:', err);
+			alert('Failed to submit score. Please try again.');
+		} finally {
+			isSubmitting = false;
+		}
+	}
+
+	function handleGameOver() {
+		if (score > 0 && !hasSubmittedScore) {
+			// Check if this score would make the leaderboard
+			const wouldMakeLeaderboard =
+				leaderboard.length < 20 || score > leaderboard[leaderboard.length - 1]?.score;
+
+			if (wouldMakeLeaderboard) {
+				const savedName = localStorage.getItem('snakePlayerName');
+				if (savedName) {
+					playerName = savedName;
+				}
+				showNamePrompt = true;
+			}
+		}
+	}
 
 	const rows = 12;
 	const cols = 12;
@@ -57,6 +124,7 @@
 		if (dieFromWalls) {
 			if (headX < 0 || headX >= cols || headY < 0 || headY >= rows) {
 				gameOver = true;
+				handleGameOver();
 				return false;
 			}
 		} else {
@@ -67,6 +135,7 @@
 		const newHead = `${headX}_${headY}`;
 		if (snakeCoords.includes(newHead) && snakeCoords.length > 1) {
 			gameOver = true;
+			handleGameOver();
 			return false;
 		}
 
@@ -96,6 +165,8 @@
 		dirX = dirY = 0;
 		score = 0;
 		gameOver = false;
+		hasSubmittedScore = false;
+		showNamePrompt = false;
 		placeApple();
 		setCellColor(appleCoords, 'red');
 		setCellColor('5_5', 'lime');
@@ -104,6 +175,12 @@
 	}
 
 	function handleKey(e: KeyboardEvent) {
+		// Don't handle game controls if user is typing in an input field
+		const target = e.target as HTMLElement;
+		if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+			return;
+		}
+
 		const keyMap: Record<string, [number, number]> = {
 			w: [0, -1],
 			ArrowUp: [0, -1],
@@ -151,16 +228,13 @@
 		let newDirY = dirY;
 
 		if (Math.abs(deltaX) > Math.abs(deltaY)) {
-			// Horizontal swipe
 			newDirX = deltaX > 0 ? 1 : -1;
 			newDirY = 0;
 		} else {
-			// Vertical swipe
 			newDirX = 0;
 			newDirY = deltaY > 0 ? 1 : -1;
 		}
 
-		// Don't allow reversing direction
 		if (snakeCoords.length === 1 || (dirX !== -newDirX && dirY !== -newDirY)) {
 			dirX = newDirX;
 			dirY = newDirY;
@@ -191,10 +265,10 @@
 			navHeight = 0;
 		}
 
-		const availableHeight = window.innerHeight - navHeight - 250; // Space for controls
-		const availableWidth = window.innerWidth - 32; // 16px padding each side
+		const availableHeight = window.innerHeight - navHeight - 250;
+		const availableWidth = window.innerWidth - 32;
 		const size = Math.min(availableWidth, availableHeight);
-		containerSize = Math.max(280, size); // Minimum 280px
+		containerSize = Math.max(280, size);
 
 		isMobile = window.innerWidth <= 767;
 	}
@@ -207,6 +281,7 @@
 		window.addEventListener('resize', resizeGrid);
 		resizeGrid();
 		requestAnimationFrame(loop);
+		loadLeaderboard();
 	});
 
 	onDestroy(() => {
@@ -235,6 +310,40 @@
 			{/each}
 		</div>
 	</div>
+
+	{#if showNamePrompt}
+		<div class="name-prompt card">
+			<h3>🎉 Great Score!</h3>
+			<p>Enter your name for the leaderboard:</p>
+			<form on:submit|preventDefault={submitScore}>
+				<input
+					type="text"
+					bind:value={playerName}
+					placeholder="Your name"
+					maxlength="20"
+					required
+					disabled={isSubmitting}
+				/>
+				<div class="button-group">
+					<button
+						type="submit"
+						class="button-primary"
+						disabled={isSubmitting || !playerName.trim()}
+					>
+						{isSubmitting ? 'Submitting...' : 'Submit Score'}
+					</button>
+					<button
+						type="button"
+						class="button-secondary"
+						on:click={() => (showNamePrompt = false)}
+						disabled={isSubmitting}
+					>
+						Skip
+					</button>
+				</div>
+			</form>
+		</div>
+	{/if}
 
 	<div class="controls-section">
 		{#if isMobile}
@@ -292,6 +401,37 @@
 		<button class="button-primary reset-btn" on:click={reset}>
 			{gameOver ? 'Play Again' : 'Reset Game'}
 		</button>
+	</div>
+
+	<!-- Leaderboard Section -->
+	<div class="leaderboard-section">
+		<h2 class="leaderboard-title">🏆 Top Players</h2>
+
+		{#if leaderboard.length === 0}
+			<div class="empty-leaderboard card">
+				<p>No scores yet. Be the first to make the leaderboard!</p>
+			</div>
+		{:else}
+			<div class="leaderboard-list">
+				{#each leaderboard as entry, index}
+					<div class="leaderboard-entry card" class:top-three={index < 3}>
+						<div class="rank">
+							{#if index === 0}
+								🥇
+							{:else if index === 1}
+								🥈
+							{:else if index === 2}
+								🥉
+							{:else}
+								<span class="rank-number">#{index + 1}</span>
+							{/if}
+						</div>
+						<div class="player-name">{entry.player_name}</div>
+						<div class="player-score">{entry.score}</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
 	</div>
 </div>
 
@@ -390,6 +530,108 @@
 		transition: background-color 0.1s ease;
 	}
 
+	/* Name Prompt Styles */
+	.name-prompt {
+		width: 100%;
+		max-width: 400px;
+		padding: var(--spacing-lg);
+		background: linear-gradient(135deg, var(--color-surface), var(--color-surface-elevated));
+		border: 2px solid var(--color-primary);
+		animation: slideIn 0.3s ease;
+	}
+
+	@keyframes slideIn {
+		from {
+			opacity: 0;
+			transform: translateY(-20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.name-prompt h3 {
+		margin: 0 0 var(--spacing-sm) 0;
+		font-size: 1.5rem;
+		text-align: center;
+		color: var(--color-text);
+	}
+
+	.name-prompt p {
+		margin: 0 0 var(--spacing-md) 0;
+		text-align: center;
+		color: var(--color-text-secondary);
+	}
+
+	.name-prompt form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+	}
+
+	.name-prompt input {
+		padding: var(--spacing-md);
+		font-size: 1rem;
+		border: 2px solid var(--color-border-light);
+		border-radius: var(--radius-md);
+		background: var(--color-background);
+		color: var(--color-text);
+		transition: border-color 0.2s ease;
+	}
+
+	.name-prompt input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+	}
+
+	.name-prompt input:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.button-group {
+		display: flex;
+		gap: var(--spacing-sm);
+	}
+
+	.button-group button {
+		flex: 1;
+		padding: var(--spacing-md);
+		font-size: 1rem;
+		border: none;
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-weight: 600;
+	}
+
+	.button-primary {
+		background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+		color: white;
+	}
+
+	.button-primary:hover:not(:disabled) {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+	}
+
+	.button-primary:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+		transform: none;
+	}
+
+	.button-secondary {
+		background: var(--color-surface);
+		color: var(--color-text);
+		border: 2px solid var(--color-border-light);
+	}
+
+	.button-secondary:hover:not(:disabled) {
+		background: var(--color-surface-elevated);
+	}
+
 	.controls-section {
 		display: flex;
 		flex-direction: column;
@@ -474,6 +716,92 @@
 		padding: var(--spacing-md) var(--spacing-xl);
 	}
 
+	/* Leaderboard Styles */
+	.leaderboard-section {
+		width: 100%;
+		max-width: 500px;
+		margin-top: var(--spacing-lg);
+	}
+
+	.leaderboard-title {
+		text-align: center;
+		font-size: 1.75rem;
+		font-weight: 700;
+		margin: 0 0 var(--spacing-lg) 0;
+		background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+
+	.empty-leaderboard {
+		padding: var(--spacing-xl);
+		text-align: center;
+		background: var(--color-surface);
+		border: 2px solid var(--color-border-light);
+	}
+
+	.empty-leaderboard p {
+		margin: 0;
+		color: var(--color-text-secondary);
+	}
+
+	.leaderboard-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+	}
+
+	.leaderboard-entry {
+		display: grid;
+		grid-template-columns: 50px 1fr auto;
+		align-items: center;
+		gap: var(--spacing-md);
+		padding: var(--spacing-md) var(--spacing-lg);
+		background: var(--color-surface);
+		border: 2px solid var(--color-border-light);
+		transition: all 0.2s ease;
+	}
+
+	.leaderboard-entry:hover {
+		background: var(--color-surface-elevated);
+		transform: translateX(4px);
+	}
+
+	.leaderboard-entry.top-three {
+		border-color: var(--color-primary);
+		background: linear-gradient(135deg, var(--color-surface), var(--color-surface-elevated));
+		box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+	}
+
+	.rank {
+		font-size: 1.5rem;
+		text-align: center;
+		font-weight: 700;
+	}
+
+	.rank-number {
+		font-size: 1rem;
+		color: var(--color-text-secondary);
+	}
+
+	.player-name {
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--color-text);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.player-score {
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: var(--color-primary);
+		min-width: 50px;
+		text-align: right;
+	}
+
 	/* Mobile Styles */
 	@media only screen and (max-width: 767px) {
 		.snake-game-container {
@@ -504,6 +832,14 @@
 			border-width: 2px;
 		}
 
+		.name-prompt {
+			padding: var(--spacing-md);
+		}
+
+		.name-prompt h3 {
+			font-size: 1.25rem;
+		}
+
 		.d-pad {
 			width: 160px;
 		}
@@ -525,6 +861,28 @@
 			min-width: 160px;
 			font-size: 1rem;
 			padding: var(--spacing-sm) var(--spacing-lg);
+		}
+
+		.leaderboard-title {
+			font-size: 1.5rem;
+		}
+
+		.leaderboard-entry {
+			grid-template-columns: 40px 1fr auto;
+			gap: var(--spacing-sm);
+			padding: var(--spacing-sm) var(--spacing-md);
+		}
+
+		.rank {
+			font-size: 1.25rem;
+		}
+
+		.player-name {
+			font-size: 1rem;
+		}
+
+		.player-score {
+			font-size: 1.125rem;
 		}
 	}
 
@@ -553,6 +911,18 @@
 		.d-pad-btn svg {
 			width: 24px;
 			height: 24px;
+		}
+
+		.leaderboard-entry {
+			padding: var(--spacing-sm);
+		}
+
+		.player-name {
+			font-size: 0.9375rem;
+		}
+
+		.player-score {
+			font-size: 1rem;
 		}
 	}
 </style>

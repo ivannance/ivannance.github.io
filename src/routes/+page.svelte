@@ -21,11 +21,11 @@
 
 		<div class="card-footer">
 			<h3 class="suggestion-text">Got a suggestion for the site?</h3>
-			<button 
-				type="button" 
+			<button
+				type="button"
 				class="button-primary contact-btn"
 				onclick={() => {
-					window.open('https://instagram.com/ivanluvswaffles', '_blank')
+					window.open('https://instagram.com/ivanluvswaffles', '_blank');
 				}}
 			>
 				DM @ivanluvswaffles

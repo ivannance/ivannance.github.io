@@ -1,0 +1,3 @@
+export const PUBLIC_SUPABASE_URL = 'https://yssiqyiyyznrwwpjaclm.supabase.co';
+export const PUBLIC_SUPABASE_ANON_KEY =
+	'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlzc2lxeWl5eXpucnd3cGphY2xtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxNDA5ODksImV4cCI6MjA3ODcxNjk4OX0.bdd21NmZvK0VeWiIv0m8kdSxEkmLst7HkRaTw1rcPEM';
