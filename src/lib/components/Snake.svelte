@@ -241,13 +241,6 @@
 		}
 	}
 
-	function handleButtonPress(x: number, y: number) {
-		if (snakeCoords.length === 1 || (dirX !== -x && dirY !== -y)) {
-			dirX = x;
-			dirY = y;
-		}
-	}
-
 	function loop(timestamp: number) {
 		if (timestamp - lastTime >= speed) {
 			lastTime = timestamp;
@@ -347,53 +340,7 @@
 
 	<div class="controls-section">
 		{#if isMobile}
-			<div class="touch-controls">
-				<div class="d-pad">
-					<button class="d-pad-btn up" on:click={() => handleButtonPress(0, -1)}>
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="3"
-								d="M5 15l7-7 7 7"
-							/>
-						</svg>
-					</button>
-					<div class="d-pad-middle">
-						<button class="d-pad-btn left" on:click={() => handleButtonPress(-1, 0)}>
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="3"
-									d="M15 19l-7-7 7-7"
-								/>
-							</svg>
-						</button>
-						<button class="d-pad-btn right" on:click={() => handleButtonPress(1, 0)}>
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="3"
-									d="M9 5l7 7-7 7"
-								/>
-							</svg>
-						</button>
-					</div>
-					<button class="d-pad-btn down" on:click={() => handleButtonPress(0, 1)}>
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="3"
-								d="M19 9l-7 7-7-7"
-							/>
-						</svg>
-					</button>
-				</div>
-			</div>
-			<p class="controls-hint">Swipe or use buttons to control</p>
+			<p class="controls-hint">Swipe to control</p>
 		{:else}
 			<p class="controls-hint">Use WASD or arrow keys to control the snake</p>
 		{/if}
@@ -647,69 +594,6 @@
 		padding: var(--spacing-md);
 	}
 
-	.d-pad {
-		display: grid;
-		grid-template-rows: auto auto auto;
-		gap: 4px;
-		width: 180px;
-	}
-
-	.d-pad-middle {
-		display: grid;
-		grid-template-columns: 1fr 1fr 1fr;
-		gap: 4px;
-	}
-
-	.d-pad-btn {
-		width: 100%;
-		height: 56px;
-		background: linear-gradient(135deg, var(--color-surface), var(--color-surface-elevated));
-		border: 2px solid var(--color-border-light);
-		border-radius: var(--radius-md);
-		color: var(--color-text);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		touch-action: manipulation;
-	}
-
-	.d-pad-btn:active {
-		background: var(--color-primary);
-		border-color: var(--color-primary);
-		transform: scale(0.95);
-		box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
-	}
-
-	.d-pad-btn svg {
-		width: 32px;
-		height: 32px;
-	}
-
-	.d-pad-btn.up {
-		grid-column: 2;
-	}
-
-	.d-pad-btn.down {
-		grid-column: 2;
-	}
-
-	.d-pad-btn.left {
-		grid-column: 1;
-	}
-
-	.d-pad-btn.right {
-		grid-column: 3;
-	}
-
-	.controls-hint {
-		text-align: center;
-		color: var(--color-text-secondary);
-		font-size: 1rem;
-		margin: 0;
-	}
-
 	.reset-btn {
 		min-width: 200px;
 		font-size: 1.125rem;
@@ -840,19 +724,6 @@
 			font-size: 1.25rem;
 		}
 
-		.d-pad {
-			width: 160px;
-		}
-
-		.d-pad-btn {
-			height: 50px;
-		}
-
-		.d-pad-btn svg {
-			width: 28px;
-			height: 28px;
-		}
-
 		.controls-hint {
 			font-size: 0.9375rem;
 		}
@@ -898,19 +769,6 @@
 
 		.game-over-banner {
 			font-size: 1.125rem;
-		}
-
-		.d-pad {
-			width: 140px;
-		}
-
-		.d-pad-btn {
-			height: 44px;
-		}
-
-		.d-pad-btn svg {
-			width: 24px;
-			height: 24px;
 		}
 
 		.leaderboard-entry {
