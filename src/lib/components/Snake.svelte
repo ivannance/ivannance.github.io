@@ -29,7 +29,11 @@
 		const trimmedName = playerName.trim();
 
 		try {
-			localStorage.setItem('snakePlayerName', trimmedName);
+			try {
+				localStorage.setItem('snakePlayerName', trimmedName);
+			} catch (err) {
+				console.warn('Could not save to localStorage:', err);
+			}
 
 			const { error } = await supabase.from('snake_leaderboard').insert({
 				player_name: trimmedName,
@@ -59,9 +63,13 @@
 				leaderboard.length < 20 || score > leaderboard[leaderboard.length - 1]?.score;
 
 			if (wouldMakeLeaderboard) {
-				const savedName = localStorage.getItem('snakePlayerName');
-				if (savedName) {
-					playerName = savedName;
+				try {
+					const savedName = localStorage.getItem('snakePlayerName');
+					if (savedName) {
+						playerName = savedName;
+					}
+				} catch (err) {
+					console.warn('Could not read from localStorage:', err);
 				}
 				showNamePrompt = true;
 			}
@@ -82,6 +90,7 @@
 	let score = 0;
 	let gameOver = false;
 	let isMobile = false;
+	let inputQueue: [number, number][] = [];
 
 	let navElement: HTMLElement | null = null;
 	let navHeight = 0;
@@ -114,8 +123,26 @@
 		grid[y][x] = color;
 	}
 
+	function isReversing(newDirX: number, newDirY: number): boolean {
+		if (snakeCoords.length <= 1) return false;
+
+		const [headX, headY] = snakeCoords[0].split('_').map(Number);
+		const newHeadX = headX + newDirX;
+		const newHeadY = headY + newDirY;
+		const [secondX, secondY] = snakeCoords[1].split('_').map(Number);
+
+		return newHeadX === secondX && newHeadY === secondY;
+	}
+
 	function update() {
 		if (gameOver) return false;
+
+		// Process queued input
+		if (inputQueue.length > 0) {
+			const [x, y] = inputQueue.shift()!;
+			dirX = x;
+			dirY = y;
+		}
 
 		let [headX, headY] = snakeCoords[0].split('_').map(Number);
 		headX += dirX;
@@ -167,6 +194,7 @@
 		gameOver = false;
 		hasSubmittedScore = false;
 		showNamePrompt = false;
+		inputQueue = [];
 		placeApple();
 		setCellColor(appleCoords, 'red');
 		setCellColor('5_5', 'lime');
@@ -191,17 +219,24 @@
 			d: [1, 0],
 			ArrowRight: [1, 0]
 		};
+
 		if (e.key === ' ') {
 			e.preventDefault();
 			reset();
 			return;
 		}
+
 		if (keyMap[e.key]) {
 			e.preventDefault();
 			const [x, y] = keyMap[e.key];
-			if (snakeCoords.length === 1 || (dirX !== -x && dirY !== -y)) {
-				dirX = x;
-				dirY = y;
+
+			if (isReversing(x, y)) {
+				return;
+			}
+
+			// Add to queue instead of immediately setting (max 2 inputs queued)
+			if (inputQueue.length < 2) {
+				inputQueue.push([x, y]);
 			}
 		}
 	}
@@ -235,9 +270,13 @@
 			newDirY = deltaY > 0 ? 1 : -1;
 		}
 
-		if (snakeCoords.length === 1 || (dirX !== -newDirX && dirY !== -newDirY)) {
-			dirX = newDirX;
-			dirY = newDirY;
+		if (isReversing(newDirX, newDirY)) {
+			return;
+		}
+
+		// Add to queue for touch controls too
+		if (inputQueue.length < 2) {
+			inputQueue.push([newDirX, newDirY]);
 		}
 	}
 

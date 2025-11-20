@@ -18,6 +18,8 @@
 	// Touch controls
 	let touchStartX: number = 0;
 	let touchStartY: number = 0;
+	let isTouching: boolean = false;
+	let touchDirection: { dr: number; dc: number } | null = null;
 
 	// Colors
 	const COLORS = {
@@ -36,31 +38,42 @@
 	let showingSolution: boolean = false;
 	let exitPos: Position = { row: 0, col: 0 };
 
-	// Movement state
+	// Hold-to-move system
+	let keysPressed: Set<string> = new Set();
 	let currentDirection: { dr: number; dc: number } | null = null;
 	let moveInterval: ReturnType<typeof setInterval> | null = null;
-	const MOVE_SPEED = 75; // ms per step — lower = faster
+	const MOVE_SPEED = 100; // Adjustable - lower = faster
+
+	// Key priority for when multiple keys are held
+	const KEY_PRIORITY = ['ArrowUp', 'w', 'ArrowDown', 's', 'ArrowLeft', 'a', 'ArrowRight', 'd'];
 
 	function saveProgress() {
 		if (typeof localStorage === 'undefined') return;
-		localStorage.setItem('mazeLevel', String(mazeLevel));
-		localStorage.setItem('currentLevel', String(currentLevel));
+		try {
+			localStorage.setItem('mazeLevel', String(mazeLevel));
+			localStorage.setItem('currentLevel', String(currentLevel));
+		} catch (err) {
+			console.warn('Could not save to localStorage:', err);
+		}
 	}
 
 	function loadProgress() {
 		if (typeof localStorage === 'undefined') return;
 
-		const savedMaze = localStorage.getItem('mazeLevel');
-		const savedLevel = localStorage.getItem('currentLevel');
+		try {
+			const savedMaze = localStorage.getItem('mazeLevel');
+			const savedLevel = localStorage.getItem('currentLevel');
 
-		if (savedMaze) mazeLevel = parseInt(savedMaze);
-		if (savedLevel) currentLevel = parseInt(savedLevel);
+			if (savedMaze) mazeLevel = parseInt(savedMaze);
+			if (savedLevel) currentLevel = parseInt(savedLevel);
 
-		mazeRows = mazeLevel;
-		mazeCols = mazeLevel;
+			mazeRows = mazeLevel;
+			mazeCols = mazeLevel;
+		} catch (err) {
+			console.warn('Could not read from localStorage:', err);
+		}
 	}
 
-	// Helper functions
 	function createEmptyGrid(): string[][] {
 		return Array(mazeRows)
 			.fill(null)
@@ -71,10 +84,6 @@
 		return row >= 0 && row < mazeRows && col >= 0 && col < mazeCols;
 	}
 
-	function handleButtonPress(dr: number, dc: number) {
-		startMoving(dr, dc);
-	}
-
 	function generateMaze(): void {
 		grid = createEmptyGrid();
 		showingSolution = false;
@@ -83,11 +92,6 @@
 		let stack: Position[] = [];
 		let currentRow: number = 1;
 		let currentCol: number = 1;
-		let path: number[][] = [
-			[1, 0],
-			[1, 1]
-		];
-		let recordingPath: boolean = true;
 
 		visited.add(`${currentRow},${currentCol}`);
 		grid[currentRow][currentCol] = COLORS.wall;
@@ -128,46 +132,215 @@
 				stack.push({ row: currentRow, col: currentCol });
 				currentRow = newRow;
 				currentCol = newCol;
-
-				if (recordingPath) {
-					path.push([wallRow, wallCol], [newRow, newCol]);
-					if (newRow === mazeRows - 2 && newCol === mazeCols - 2) {
-						path.push([mazeRows - 2, mazeCols - 1]);
-						recordingPath = false;
-					}
-				}
 			} else if (stack.length > 0) {
 				const prev = stack.pop()!;
 				currentRow = prev.row;
 				currentCol = prev.col;
-				if (recordingPath) {
-					path.pop();
-					path.pop();
-				}
 			} else {
 				break;
 			}
 		}
 
+		// No loops — instead add long fake branches
+		addFakeBranches();
+
 		exitPos = { row: mazeRows - 2, col: mazeCols - 1 };
 		grid[exitPos.row][exitPos.col] = COLORS.exit;
+		shortestPath = findShortestPathBFS();
 
-		shortestPath = path;
 		playerPos = { row: 1, col: 0 };
 		mazeStatus = 'made';
-
 		grid = grid;
 		stopMoving();
 	}
 
-	function movePlayer(dr: number, dc: number): void {
+	function findShortestPathBFS(): number[][] {
+		const queue: { pos: Position; path: number[][] }[] = [
+			{ pos: { row: 1, col: 0 }, path: [[1, 0]] }
+		];
+		const visited = new Set<string>();
+		visited.add('1,0');
+
+		const directions = [
+			[-1, 0],
+			[1, 0],
+			[0, -1],
+			[0, 1]
+		];
+
+		while (queue.length > 0) {
+			const { pos, path } = queue.shift()!;
+
+			if (pos.row === exitPos.row && pos.col === exitPos.col) {
+				return path;
+			}
+
+			for (const [dr, dc] of directions) {
+				const newRow = pos.row + dr;
+				const newCol = pos.col + dc;
+				const key = `${newRow},${newCol}`;
+
+				if (
+					isValidCell(newRow, newCol) &&
+					!visited.has(key) &&
+					(grid[newRow][newCol] === COLORS.wall || grid[newRow][newCol] === COLORS.exit)
+				) {
+					visited.add(key);
+					queue.push({
+						pos: { row: newRow, col: newCol },
+						path: [...path, [newRow, newCol]]
+					});
+				}
+			}
+		}
+
+		return [[1, 0]];
+	}
+
+	function addFakeBranches(): void {
+		const maxBranches = Math.floor(shortestPath.length / 6);
+
+		for (let i = 0; i < maxBranches; i++) {
+			// Pick a random point on the real path
+			const [startRow, startCol] = shortestPath[Math.floor(Math.random() * shortestPath.length)];
+
+			// 50/50 chance to use this point
+			if (Math.random() < 0.5) continue;
+
+			// Try to grow a long branch
+			let length = Math.floor(Math.random() * 20) + 8; // 8–28 tiles long
+			let row = startRow;
+			let col = startCol;
+
+			// Random initial direction
+			let dirs = [
+				[-1, 0],
+				[1, 0],
+				[0, -1],
+				[0, 1]
+			];
+
+			// Avoid branching into the real path
+			dirs = dirs.filter(([dr, dc]) => {
+				const nr = row + dr;
+				const nc = col + dc;
+				return isValidCell(nr, nc) && grid[nr][nc] === COLORS.background;
+			});
+
+			if (dirs.length === 0) continue;
+
+			let [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)];
+
+			// Grow branch
+			for (let step = 0; step < length; step++) {
+				const nr = row + dr;
+				const nc = col + dc;
+
+				if (!isValidCell(nr, nc)) break;
+
+				// If this hits the real path or a previous branch — stop
+				if (grid[nr][nc] === COLORS.wall || grid[nr][nc] === COLORS.path) break;
+
+				// Carve the branch
+				grid[nr][nc] = COLORS.wall;
+
+				row = nr;
+				col = nc;
+
+				// Random chance to turn slightly
+				if (Math.random() < 0.25) {
+					const turns = dirs.filter(
+						([tdr, tdc]) =>
+							tdr !== -dr &&
+							tdc !== -dc && // no reversing
+							isValidCell(row + tdr, col + tdc) &&
+							grid[row + tdr][col + tdc] === COLORS.background
+					);
+					if (turns.length > 0) {
+						[dr, dc] = turns[Math.floor(Math.random() * turns.length)];
+					}
+				}
+			}
+
+			// The last tile stays a dead end. No action needed.
+		}
+	}
+
+	function getDirectionFromKeys(): { dr: number; dc: number } | null {
+		const keyMap: Record<string, { dr: number; dc: number }> = {
+			ArrowUp: { dr: -1, dc: 0 },
+			w: { dr: -1, dc: 0 },
+			ArrowDown: { dr: 1, dc: 0 },
+			s: { dr: 1, dc: 0 },
+			ArrowLeft: { dr: 0, dc: -1 },
+			a: { dr: 0, dc: -1 },
+			ArrowRight: { dr: 0, dc: 1 },
+			d: { dr: 0, dc: 1 }
+		};
+
+		// Find the highest priority key that's currently pressed
+		for (const key of KEY_PRIORITY) {
+			if (keysPressed.has(key)) {
+				return keyMap[key];
+			}
+		}
+
+		return null;
+	}
+
+	function updateMovementDirection(): void {
+		const newDirection = getDirectionFromKeys();
+
+		if (!newDirection && !touchDirection) {
+			// No keys pressed and no touch - stop moving
+			stopMoving();
+		} else {
+			// Use touch direction if touching, otherwise use keyboard
+			currentDirection = touchDirection || newDirection;
+
+			if (currentDirection && !moveInterval) {
+				startMoving();
+			}
+		}
+	}
+
+	function startMoving(): void {
+		if (moveInterval || mazeStatus !== 'made' || showingSolution) return;
+
+		// Immediate first move
+		if (currentDirection) {
+			movePlayer(currentDirection.dr, currentDirection.dc);
+		}
+
+		moveInterval = setInterval(() => {
+			if (currentDirection) {
+				const moved = movePlayer(currentDirection.dr, currentDirection.dc);
+
+				// If we hit a wall, stop moving
+				if (!moved) {
+					stopMoving();
+				}
+			} else {
+				stopMoving();
+			}
+		}, MOVE_SPEED);
+	}
+
+	function stopMoving(): void {
+		if (moveInterval) {
+			clearInterval(moveInterval);
+			moveInterval = null;
+		}
+		currentDirection = null;
+	}
+
+	function movePlayer(dr: number, dc: number): boolean {
 		const newRow = playerPos.row + dr;
 		const newCol = playerPos.col + dc;
 
-		// Hit wall → stop moving
+		// Hit wall - can't move
 		if (!isValidCell(newRow, newCol) || grid[newRow][newCol] === COLORS.background) {
-			stopMoving();
-			return;
+			return false;
 		}
 
 		// Move player
@@ -194,68 +367,81 @@
 		}
 
 		grid = grid;
-	}
-
-	function startMoving(dr: number, dc: number) {
-		if (mazeStatus !== 'made' || showingSolution) return;
-
-		currentDirection = { dr, dc };
-
-		// Clear any existing loop
-		if (moveInterval) clearInterval(moveInterval);
-
-		// Continuous movement
-		moveInterval = setInterval(() => {
-			if (currentDirection) movePlayer(currentDirection.dr, currentDirection.dc);
-		}, MOVE_SPEED);
-	}
-
-	function stopMoving() {
-		if (moveInterval) {
-			clearInterval(moveInterval);
-			moveInterval = null;
-		}
-		currentDirection = null;
+		return true;
 	}
 
 	function handleKeyDown(event: KeyboardEvent): void {
-		const keyMap: Record<string, { dr: number; dc: number }> = {
-			ArrowUp: { dr: -1, dc: 0 },
-			ArrowDown: { dr: 1, dc: 0 },
-			ArrowLeft: { dr: 0, dc: -1 },
-			ArrowRight: { dr: 0, dc: 1 },
-			w: { dr: -1, dc: 0 },
-			s: { dr: 1, dc: 0 },
-			a: { dr: 0, dc: -1 },
-			d: { dr: 0, dc: 1 }
-		};
+		const target = event.target as HTMLElement;
+		if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+			return;
+		}
 
-		const move = keyMap[event.key];
-		if (!move) return;
+		const validKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'];
 
-		event.preventDefault();
-		startMoving(move.dr, move.dc);
+		if (validKeys.includes(event.key)) {
+			event.preventDefault();
+
+			// Add key to pressed set
+			keysPressed.add(event.key);
+			updateMovementDirection();
+		}
+	}
+
+	function handleKeyUp(event: KeyboardEvent): void {
+		const validKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'];
+
+		if (validKeys.includes(event.key)) {
+			keysPressed.delete(event.key);
+			updateMovementDirection();
+		}
 	}
 
 	function handleTouchStart(e: TouchEvent): void {
+		e.preventDefault();
+		isTouching = true;
 		touchStartX = e.touches[0].clientX;
 		touchStartY = e.touches[0].clientY;
+
+		// Start continuous movement immediately
+		updateTouchDirection(e.touches[0].clientX, e.touches[0].clientY);
+	}
+
+	function handleTouchMove(e: TouchEvent): void {
+		if (!isTouching) return;
+		e.preventDefault();
+		updateTouchDirection(e.touches[0].clientX, e.touches[0].clientY);
 	}
 
 	function handleTouchEnd(e: TouchEvent): void {
-		const touchEndX = e.changedTouches[0].clientX;
-		const touchEndY = e.changedTouches[0].clientY;
+		e.preventDefault();
+		isTouching = false;
+		touchDirection = null;
+		updateMovementDirection();
+	}
 
-		const deltaX = touchEndX - touchStartX;
-		const deltaY = touchEndY - touchStartY;
+	function updateTouchDirection(currentX: number, currentY: number): void {
+		const deltaX = currentX - touchStartX;
+		const deltaY = currentY - touchStartY;
 		const minSwipeDistance = 20;
 
-		if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) return;
+		if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) {
+			return;
+		}
 
 		if (Math.abs(deltaX) > Math.abs(deltaY)) {
-			startMoving(0, deltaX > 0 ? 1 : -1);
+			touchDirection = { dr: 0, dc: deltaX > 0 ? 1 : -1 };
 		} else {
-			startMoving(deltaY > 0 ? 1 : -1, 0);
+			touchDirection = { dr: deltaY > 0 ? 1 : -1, dc: 0 };
+		}
+
+		updateMovementDirection();
+	}
+
+	function handleButtonPress(dr: number, dc: number) {
+		// For mobile button controls - simulate key press
+		currentDirection = { dr, dc };
+		if (!moveInterval) {
+			startMoving();
 		}
 	}
 
@@ -309,11 +495,13 @@
 		updateBoardSize();
 		generateMaze();
 		window.addEventListener('keydown', handleKeyDown);
+		window.addEventListener('keyup', handleKeyUp);
 		window.addEventListener('resize', handleResize);
 	});
 
 	onDestroy(() => {
 		window.removeEventListener('keydown', handleKeyDown);
+		window.removeEventListener('keyup', handleKeyUp);
 		window.removeEventListener('resize', handleResize);
 		stopMoving();
 	});
