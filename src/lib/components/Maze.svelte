@@ -141,9 +141,6 @@
 			}
 		}
 
-		// No loops — instead add long fake branches
-		addFakeBranches();
-
 		exitPos = { row: mazeRows - 2, col: mazeCols - 1 };
 		grid[exitPos.row][exitPos.col] = COLORS.exit;
 		shortestPath = findShortestPathBFS();
@@ -195,75 +192,6 @@
 		}
 
 		return [[1, 0]];
-	}
-
-	function addFakeBranches(): void {
-		const maxBranches = Math.floor(shortestPath.length / 6);
-
-		for (let i = 0; i < maxBranches; i++) {
-			// Pick a random point on the real path
-			const [startRow, startCol] = shortestPath[Math.floor(Math.random() * shortestPath.length)];
-
-			// 50/50 chance to use this point
-			if (Math.random() < 0.5) continue;
-
-			// Try to grow a long branch
-			let length = Math.floor(Math.random() * 20) + 8; // 8–28 tiles long
-			let row = startRow;
-			let col = startCol;
-
-			// Random initial direction
-			let dirs = [
-				[-1, 0],
-				[1, 0],
-				[0, -1],
-				[0, 1]
-			];
-
-			// Avoid branching into the real path
-			dirs = dirs.filter(([dr, dc]) => {
-				const nr = row + dr;
-				const nc = col + dc;
-				return isValidCell(nr, nc) && grid[nr][nc] === COLORS.background;
-			});
-
-			if (dirs.length === 0) continue;
-
-			let [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)];
-
-			// Grow branch
-			for (let step = 0; step < length; step++) {
-				const nr = row + dr;
-				const nc = col + dc;
-
-				if (!isValidCell(nr, nc)) break;
-
-				// If this hits the real path or a previous branch — stop
-				if (grid[nr][nc] === COLORS.wall || grid[nr][nc] === COLORS.path) break;
-
-				// Carve the branch
-				grid[nr][nc] = COLORS.wall;
-
-				row = nr;
-				col = nc;
-
-				// Random chance to turn slightly
-				if (Math.random() < 0.25) {
-					const turns = dirs.filter(
-						([tdr, tdc]) =>
-							tdr !== -dr &&
-							tdc !== -dc && // no reversing
-							isValidCell(row + tdr, col + tdc) &&
-							grid[row + tdr][col + tdc] === COLORS.background
-					);
-					if (turns.length > 0) {
-						[dr, dc] = turns[Math.floor(Math.random() * turns.length)];
-					}
-				}
-			}
-
-			// The last tile stays a dead end. No action needed.
-		}
 	}
 
 	function getDirectionFromKeys(): { dr: number; dc: number } | null {
