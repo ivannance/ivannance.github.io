@@ -35,10 +35,38 @@
 				console.warn('Could not save to localStorage:', err);
 			}
 
-			const { error } = await supabase.from('snake_leaderboard').insert({
-				player_name: trimmedName,
-				score: score
-			});
+			// Check if player already exists
+			const { data: existingPlayer } = await supabase
+				.from('snake_leaderboard')
+				.select('*')
+				.eq('player_name', trimmedName)
+				.single();
+
+			let error;
+
+			if (existingPlayer) {
+				// Update existing entry if new score is higher
+				if (score > existingPlayer.score) {
+					const result = await supabase
+						.from('snake_leaderboard')
+						.update({ score: score })
+						.eq('player_name', trimmedName);
+					error = result.error;
+				} else {
+					// Score isn't higher, so just close the prompt
+					hasSubmittedScore = true;
+					showNamePrompt = false;
+					await loadLeaderboard();
+					return;
+				}
+			} else {
+				// Insert new entry
+				const result = await supabase.from('snake_leaderboard').insert({
+					player_name: trimmedName,
+					score: score
+				});
+				error = result.error;
+			}
 
 			if (error) {
 				console.error('Error submitting score:', error);
