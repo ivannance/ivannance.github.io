@@ -1,7 +1,7 @@
 <script>
 	const games = [
-		{ name: 'Snake', path: '/fun/snake', color: 'green' },
-		{ name: 'Maze', path: '/fun/maze', color: 'red' }
+		{ name: 'Snake', path: '/games/snake', color: 'green' },
+		{ name: 'Maze', path: '/games/maze', color: 'red' }
 	];
 </script>
 

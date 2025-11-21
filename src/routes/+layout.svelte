@@ -19,7 +19,7 @@
 
 <nav>
 	<div class="nav-content">
-		<div class="logo">Ivan's World</div>
+		<a href="/" class="logo">Ivan's World</a>
 		
 		<!-- Hamburger menu button for mobile -->
 		<button class="menu-toggle" onclick={toggleMenu} aria-label="Toggle menu">
@@ -30,9 +30,9 @@
 
 		<div class="nav-links" class:open={mobileMenuOpen}>
 			<a href="/" onclick={closeMenu}>Home</a>
-			<a href="/guides" onclick={closeMenu}>Guides</a>
-			<a href="/fun" onclick={closeMenu}>Fun</a>
-			<a href="/other" onclick={closeMenu}>Other</a>
+			<!--<a href="/guides" onclick={closeMenu}>Guides</a>-->
+			<a href="/games" onclick={closeMenu}>Games</a>
+			<!--<a href="/other" onclick={closeMenu}>Other</a>-->
 		</div>
 	</div>
 </nav>

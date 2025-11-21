@@ -14,9 +14,9 @@
 		</div>
 
 		<ol class="todo-list">
-			<li class="todo-item priority">Complete guides</li>
-			<li class="todo-item">Add more games</li>
-			<li class="todo-item">Game leaderboard</li>
+			<li class="todo-item priority">More games</li>
+			<li class="todo-item">Complete unfinished features</li>
+			<li class="todo-item">Add new features</li>
 		</ol>
 
 		<div class="card-footer">
